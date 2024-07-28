@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Латинізатор</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h1 class="mt-4 mb-4">Латинізатор</h1>
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Кирилиця</h2>
+        <textarea id="inputText" class="form-control" rows="10" placeholder="Введіть текст кирилицею тут..."></textarea>
+      </div>
+      <div class="col-md-6">
+        <h2>Латиниця</h2>
+        <textarea id="outputText" class="form-control" rows="10" readonly></textarea>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <button id="transliterateButton" class="btn btn-primary">Транслітерувати</button>
+      </div>
+      <div class="col-md-6">
+        <button id="copyButton" class="btn btn-secondary">Копіювати результат</button>
+      </div>
+    </div>
+  <script src="../lib/transliteration.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

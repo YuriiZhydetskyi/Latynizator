@@ -1,0 +1,70 @@
+{
+  "extensionName": {
+    "message": "Ukrainian Transliterator",
+    "description": "The name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Transliterates Ukrainian text from Cyrillic to Latin script",
+    "description": "The description of the extension"
+  },
+  "enableGlobally": {
+    "message": "Enable globally",
+    "description": "Label for the global enable checkbox"
+  },
+  "enableForSite": {
+    "message": "Enable for this site",
+    "description": "Label for the site enable checkbox"
+  },
+  "enableForPage": {
+    "message": "Enable for this page",
+    "description": "Label for the page enable checkbox"
+  },
+  "transliterateNow": {
+    "message": "Transliterate Now",
+    "description": "Label for the transliterate button"
+  },
+  "revertTransliteration": {
+    "message": "Revert Transliteration",
+    "description": "Label for the revert button"
+  },
+  "openExplanation": {
+    "message": "Open Explanation",
+    "description": "Label for the explanation button"
+  },
+  "optionsTitle": {
+    "message": "Ukrainian Transliterator Options",
+    "description": "Title for the options page"
+  },
+  "autoTransliterate": {
+    "message": "Automatically transliterate pages when loaded",
+    "description": "Label for the auto-transliterate option"
+  },
+  "saveOptions": {
+    "message": "Save Options",
+    "description": "Label for the save options button"
+  },
+  "optionsSaved": {
+    "message": "Options saved.",
+    "description": "Message shown when options are saved"
+  },
+  "selectLanguage": {
+    "message": "Select Language",
+    "description": "Label for the language selection dropdown"
+  },
+  "inputLabel": {
+    "message": "Input (Cyrillic)",
+    "description": "Label for the input text area"
+  },
+  "outputLabel": {
+    "message": "Output (Latin)",
+    "description": "Label for the output text area"
+  },
+  "copyToClipboard": {
+    "message": "Copy to Clipboard",
+    "description": "Label for the copy button"
+  },
+  "textCopied": {
+    "message": "Transliterated text copied to clipboard!",
+    "description": "Message shown when text is copied"
+  }
+}

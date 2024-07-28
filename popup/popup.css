@@ -1,0 +1,16 @@
+body {
+    width: 300px;
+    padding: 10px;
+  }
+  
+  .container {
+    max-width: 100%;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  .btn {
+    width: 100%;
+  }
