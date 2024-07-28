@@ -103,8 +103,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: "Transliteration reverted" });
   } else if (request.action === "getState") {
     sendResponse(currentState);
+  } else if (request.action === "transliterateSelection") {
+    const activeElement = document.activeElement;
+    let selectedText, startIndex, endIndex;
+
+    if (activeElement.tagName === 'TEXTAREA' || (activeElement.tagName === 'INPUT' && activeElement.type === 'text')) {
+      // Handle textarea and text input
+      startIndex = activeElement.selectionStart;
+      endIndex = activeElement.selectionEnd;
+      selectedText = activeElement.value.substring(startIndex, endIndex);
+    } else {
+      // Handle regular page text
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        selectedText = range.toString();
+      }
+    }
+
+    if (selectedText) {
+      const transliteratedText = transliterate(selectedText);
+
+      if (activeElement.tagName === 'TEXTAREA' || (activeElement.tagName === 'INPUT' && activeElement.type === 'text')) {
+        // Replace text in textarea or text input
+        const newValue = activeElement.value.substring(0, startIndex) + transliteratedText + activeElement.value.substring(endIndex);
+        activeElement.value = newValue;
+        activeElement.setSelectionRange(startIndex, startIndex + transliteratedText.length);
+      } else {
+        // Replace text in regular page content
+        const range = window.getSelection().getRangeAt(0);
+        range.deleteContents();
+        const span = document.createElement('span');
+        span.textContent = transliteratedText;
+        span.setAttribute('data-original', selectedText);
+        span.setAttribute('data-transliterated', 'true');
+        range.insertNode(span);
+      }
+
+      sendResponse({status: "Transliteration completed"});
+    } else {
+      sendResponse({status: "No selection found"});
+    }
   }
   return true;
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
 });
 
 updateBackgroundState();

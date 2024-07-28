@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function updateLanguage(lang) {
     await new Promise(resolve => chrome.storage.local.set({language: lang}, resolve));
+    chrome.runtime.sendMessage({action: 'updateContextMenu', language: lang});
     window.location.reload();
   }
 

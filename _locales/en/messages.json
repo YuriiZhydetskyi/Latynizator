@@ -66,5 +66,9 @@
   "textCopied": {
     "message": "Transliterated text copied to clipboard!",
     "description": "Message shown when text is copied"
+  },
+  "contextMenuTransliterate": {
+    "message": "Transliterate",
+    "description": "Context menu item for transliteration"
   }
 }

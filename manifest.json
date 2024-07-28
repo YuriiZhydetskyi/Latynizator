@@ -7,10 +7,12 @@
   "permissions": [
     "storage",
     "activeTab",
-    "<all_urls>"
+    "<all_urls>",
+    "contextMenus"
   ],
   "background": {
     "scripts": [
+      "lib/transliteration.js",
       "background.js"
     ],
     "persistent": false
