@@ -7,7 +7,9 @@
   "permissions": [
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "scripting",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -53,6 +55,10 @@
     "128": "icons/icon128.jpeg"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "lib/transliteration.js",
+      "background.js"
+    ],
+    "type": "module"
   }
 }

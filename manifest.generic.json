@@ -7,11 +7,16 @@
   "permissions": [
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "scripting",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "web_accessible_resources": [
     {
       "resources": ["_locales/*/messages.json"],
@@ -38,14 +43,14 @@
       "128": "icons/icon128.jpeg"
     }
   },
-  "options_ui": {
-    "page": "options/options.html",
-    "open_in_tab": true
-  },
   "icons": {
     "16": "icons/icon16.jpeg",
     "32": "icons/icon32.jpeg",
     "48": "icons/icon48.jpeg",
     "128": "icons/icon128.jpeg"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
   }
 }

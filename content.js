@@ -105,13 +105,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse(currentState);
   } else if (request.action === "transliterateSelection") {
     const activeElement = document.activeElement;
-    let selectedText, startIndex, endIndex;
+    let selectedText = '';
+    let startIndex, endIndex;
 
     if (activeElement.tagName === 'TEXTAREA' || (activeElement.tagName === 'INPUT' && activeElement.type === 'text')) {
       // Handle textarea and text input
       startIndex = activeElement.selectionStart;
       endIndex = activeElement.selectionEnd;
       selectedText = activeElement.value.substring(startIndex, endIndex);
+    } else if (activeElement.isContentEditable) {
+      // Handle contenteditable elements
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        selectedText = range.toString();
+      }
     } else {
       // Handle regular page text
       const selection = window.getSelection();
@@ -123,21 +131,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (selectedText) {
       const transliteratedText = transliterate(selectedText);
-
+      
       if (activeElement.tagName === 'TEXTAREA' || (activeElement.tagName === 'INPUT' && activeElement.type === 'text')) {
-        // Replace text in textarea or text input
+        // Insert text for textarea and text input
         const newValue = activeElement.value.substring(0, startIndex) + transliteratedText + activeElement.value.substring(endIndex);
         activeElement.value = newValue;
         activeElement.setSelectionRange(startIndex, startIndex + transliteratedText.length);
+        
+        // Trigger input event
+        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+        activeElement.dispatchEvent(inputEvent);
+      } else if (activeElement.isContentEditable) {
+        // Insert text for contenteditable elements
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(transliteratedText));
+          range.setStart(range.endContainer, range.endOffset);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          
+          // Trigger input event
+          const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+          activeElement.dispatchEvent(inputEvent);
+        }
       } else {
-        // Replace text in regular page content
-        const range = window.getSelection().getRangeAt(0);
-        range.deleteContents();
-        const span = document.createElement('span');
-        span.textContent = transliteratedText;
-        span.setAttribute('data-original', selectedText);
-        span.setAttribute('data-transliterated', 'true');
-        range.insertNode(span);
+        // Insert text for regular page content
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(transliteratedText));
+          range.setStart(range.endContainer, range.endOffset);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
       }
 
       sendResponse({status: "Transliteration completed"});
