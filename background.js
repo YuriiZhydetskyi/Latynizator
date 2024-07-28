@@ -15,7 +15,7 @@ function updateContextMenu(language) {
   });
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+function init() {
   chrome.storage.local.get(['language', 'globalEnabled', 'uncheckedSites', 'checkedSites', 'uncheckedPages', 'checkedPages'], (result) => {
     if (!result.language) {
       chrome.storage.local.set({language: chrome.i18n.getUILanguage().split('-')[0]});
@@ -28,7 +28,13 @@ chrome.runtime.onInstalled.addListener(() => {
 
     updateContextMenu(result.language || 'en');
   });
-});
+}
+
+if (chrome.runtime.onInstalled) {
+  chrome.runtime.onInstalled.addListener(init);
+} else {
+  init();
+}
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.language) {
@@ -129,11 +135,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   } else if (request.action === 'setGlobalEnabled') {
     globalEnabled = request.value;
-    storage.setGlobalEnabled(globalEnabled);
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach(tab => {
-        const shouldTransliterate = globalEnabled && !uncheckedSites.includes(new URL(tab.url).hostname) && !uncheckedPages.includes(tab.url);
-        chrome.tabs.sendMessage(tab.id, { action: shouldTransliterate ? 'transliterate' : 'revert' });
+    chrome.storage.local.set({globalEnabled: globalEnabled}, () => {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+          const shouldTransliterateTab = shouldTransliterate(tab.url);
+          sendMessageToTab(tab.id, { action: shouldTransliterateTab ? 'transliterate' : 'revert' })
+            .catch(error => console.error('Error sending message to tab:', error));
+        });
       });
     });
   } else if (request.action === 'setSiteEnabled') {
@@ -152,9 +160,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           checkedSites = checkedSites.filter(site => site !== hostname);
         }
       }
-      await storage.setUncheckedSites(uncheckedSites);
-      await storage.setCheckedSites(checkedSites);
-      chrome.tabs.sendMessage(tabs[0].id, { action: shouldTransliterate(url) ? 'transliterate' : 'revert' });
+      await chrome.storage.local.set({uncheckedSites, checkedSites});
+      sendMessageToTab(tabs[0].id, { action: shouldTransliterate(url) ? 'transliterate' : 'revert' })
+        .catch(error => console.error('Error sending message to tab:', error));
     });
   } else if (request.action === 'setPageEnabled') {
     chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
@@ -166,20 +174,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         checkedPages = checkedPages.filter(page => page !== url);
         uncheckedPages.push(url);
       }
-      await storage.setUncheckedPages(uncheckedPages);
-      await storage.setCheckedPages(checkedPages);
-      chrome.tabs.sendMessage(tabs[0].id, { action: request.value ? 'transliterate' : 'revert' });
+      await chrome.storage.local.set({uncheckedPages, checkedPages});
+      sendMessageToTab(tabs[0].id, { action: request.value ? 'transliterate' : 'revert' })
+        .catch(error => console.error('Error sending message to tab:', error));
     });
   } else if (request.action === 'setPageState') {
     const tabId = sender.tab.id;
     tabStates[tabId] = request.isTransliterated;
   }
+  return true;
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
     const shouldTransliterateTab = shouldTransliterate(tab.url);
-    chrome.tabs.sendMessage(tabId, { action: shouldTransliterateTab ? 'transliterate' : 'revert' });
+    sendMessageToTab(tabId, { action: shouldTransliterateTab ? 'transliterate' : 'revert' })
+      .catch(error => console.error('Error sending message to tab:', error));
   }
 });
 
@@ -199,3 +209,26 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
 });
+
+// If this is a service worker environment (Chrome), export the init function
+if (typeof importScripts === 'function') {
+  importScripts('lib/transliteration.js');
+  self.oninstall = (event) => {
+    event.waitUntil(self.skipWaiting());
+  };
+  self.onactivate = (event) => {
+    event.waitUntil(self.clients.claim());
+  };
+}
+
+function sendMessageToTab(tabId, message) {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.sendMessage(tabId, message, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}

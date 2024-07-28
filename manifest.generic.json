@@ -14,12 +14,8 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "_locales/*/messages.json"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "resources": ["_locales/*/messages.json"],
+      "matches": ["<all_urls>"]
     }
   ],
   "content_scripts": [
@@ -51,8 +47,5 @@
     "32": "icons/icon32.jpeg",
     "48": "icons/icon48.jpeg",
     "128": "icons/icon128.jpeg"
-  },
-  "background": {
-    "service_worker": "background.js"
   }
 }
