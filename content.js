@@ -113,8 +113,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       startIndex = activeElement.selectionStart;
       endIndex = activeElement.selectionEnd;
       selectedText = activeElement.value.substring(startIndex, endIndex);
-    } else if (activeElement.isContentEditable) {
-      // Handle contenteditable elements
+    } else if (activeElement.isContentEditable || activeElement.getAttribute('role') === 'textbox') {
+      // Handle contenteditable elements and custom inputs (like WhatsApp and Messenger)
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
@@ -136,25 +136,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Insert text for textarea and text input
         const newValue = activeElement.value.substring(0, startIndex) + transliteratedText + activeElement.value.substring(endIndex);
         activeElement.value = newValue;
-        activeElement.setSelectionRange(startIndex, startIndex + transliteratedText.length);
-        
-        // Trigger input event
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        activeElement.dispatchEvent(inputEvent);
-      } else if (activeElement.isContentEditable) {
-        // Insert text for contenteditable elements
+        activeElement.setSelectionRange(startIndex + transliteratedText.length, startIndex + transliteratedText.length);
+        simulateUserInput(activeElement, transliteratedText);
+      } else if (activeElement.isContentEditable || activeElement.getAttribute('role') === 'textbox') {
+        // Handle contenteditable elements and custom inputs (like WhatsApp and Messenger)
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           range.deleteContents();
           range.insertNode(document.createTextNode(transliteratedText));
-          range.setStart(range.endContainer, range.endOffset);
+          range.collapse(false);
           selection.removeAllRanges();
           selection.addRange(range);
-          
-          // Trigger input event
-          const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-          activeElement.dispatchEvent(inputEvent);
+          simulateUserInput(activeElement, transliteratedText);
         }
       } else {
         // Insert text for regular page content
@@ -163,7 +157,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const range = selection.getRangeAt(0);
           range.deleteContents();
           range.insertNode(document.createTextNode(transliteratedText));
-          range.setStart(range.endContainer, range.endOffset);
+          range.collapse(false);
           selection.removeAllRanges();
           selection.addRange(range);
         }
@@ -182,3 +176,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 updateBackgroundState();
+
+
+function simulateUserInput(element, text) {
+  const inputEvent = new InputEvent('input', {
+    bubbles: true,
+    cancelable: true,
+    inputType: 'insertText',
+    data: text
+  });
+  
+  const keydownEvent = new KeyboardEvent('keydown', {
+    bubbles: true,
+    cancelable: true,
+    key: 'Process',
+    code: 'Process',
+    which: 229,
+    keyCode: 229
+  });
+  
+  const keyupEvent = new KeyboardEvent('keyup', {
+    bubbles: true,
+    cancelable: true,
+    key: 'Process',
+    code: 'Process',
+    which: 229,
+    keyCode: 229
+  });
+
+  element.focus();
+  element.dispatchEvent(keydownEvent);
+  element.dispatchEvent(inputEvent);
+  element.dispatchEvent(keyupEvent);
+}
