@@ -14,7 +14,11 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "lib/transliteration.js",
+      "background.js"
+    ],
+    "type": "module"
   },
   "web_accessible_resources": [
     {

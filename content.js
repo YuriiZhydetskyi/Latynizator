@@ -91,7 +91,10 @@ function updateBackgroundState() {
 
 // Modify the existing listener to update the background state
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "transliterate" && !currentState.isTransliterated) {
+  if (request.action === 'ping') {
+    sendResponse({pong: true});
+    return;
+  } else if (request.action === "transliterate" && !currentState.isTransliterated) {
     transliteratePage();
     currentState.isTransliterated = true;
     updateBackgroundState();

@@ -16,25 +16,33 @@ function updateContextMenu(language) {
 }
 
 function init() {
-  chrome.storage.local.get(['language', 'globalEnabled', 'uncheckedSites', 'checkedSites', 'uncheckedPages', 'checkedPages'], (result) => {
-    if (!result.language) {
-      chrome.storage.local.set({language: chrome.i18n.getUILanguage().split('-')[0]});
-    }
-    globalEnabled = result.globalEnabled || false;
-    uncheckedSites = result.uncheckedSites || [];
-    checkedSites = result.checkedSites || [];
-    uncheckedPages = result.uncheckedPages || [];
-    checkedPages = result.checkedPages || [];
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['language', 'globalEnabled', 'uncheckedSites', 'checkedSites', 'uncheckedPages', 'checkedPages'], (result) => {
+      if (!result.language) {
+        chrome.storage.local.set({language: chrome.i18n.getUILanguage().split('-')[0]});
+      }
+      globalEnabled = result.globalEnabled || false;
+      uncheckedSites = result.uncheckedSites || [];
+      checkedSites = result.checkedSites || [];
+      uncheckedPages = result.uncheckedPages || [];
+      checkedPages = result.checkedPages || [];
 
-    updateContextMenu(result.language || 'en');
+      updateContextMenu(result.language || 'uk');
+      resolve();
+    });
   });
 }
 
-if (chrome.runtime.onInstalled) {
-  chrome.runtime.onInstalled.addListener(init);
-} else {
-  init();
-}
+// Call init when the script starts
+init().then(() => {
+  console.log('Extension state initialized');
+});
+
+// if (chrome.runtime.onInstalled) {
+//   chrome.runtime.onInstalled.addListener(init);
+// } else {
+//   init();
+// }
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.language) {
@@ -187,9 +195,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
-    const shouldTransliterateTab = shouldTransliterate(tab.url);
-    sendMessageToTab(tabId, { action: shouldTransliterateTab ? 'transliterate' : 'revert' })
-      .catch(error => console.error('Error sending message to tab:', error));
+    chrome.tabs.sendMessage(tabId, { action: 'ping' }, response => {
+      if (response && response.pong) {
+        const shouldTransliterateTab = shouldTransliterate(tab.url);
+        sendMessageToTab(tabId, { action: shouldTransliterateTab ? 'transliterate' : 'revert' })
+          .catch(error => console.error('Error sending message to tab:', error));
+      }
+    });
   }
 });
 
@@ -202,12 +214,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get('language', (result) => {
-    if (!result.language) {
-      chrome.storage.local.set({language: chrome.i18n.getUILanguage().split('-')[0]});
-    }
-  });
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    console.log('Extension installed');
+    // Perform first-time setup
+    chrome.storage.local.set({
+      globalEnabled: true,
+      language: chrome.i18n.getUILanguage().split('-')[0] || 'uk',
+      uncheckedSites: [],
+      checkedSites: [],
+      uncheckedPages: [],
+      checkedPages: []
+    }, () => {
+      console.log('Initial settings saved');
+      // Refresh the context menu with the initial language
+      updateContextMenu(chrome.i18n.getUILanguage().split('-')[0] || 'uk');
+    });
+  } else if (details.reason === 'update') {
+    console.log('Extension updated');
+    chrome.storage.local.get(null, (items) => {
+      // Example: If we added a new setting in this version, set a default value
+      if (typeof items.newSetting === 'undefined') {
+        chrome.storage.local.set({ newSetting: defaultValue });
+      }
+    });
+  }
 });
 
 // If this is a service worker environment (Chrome), export the init function
@@ -225,7 +256,8 @@ function sendMessageToTab(tabId, message) {
   return new Promise((resolve, reject) => {
     chrome.tabs.sendMessage(tabId, message, (response) => {
       if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
+        console.log(`Failed to send message to tab ${tabId}: ${chrome.runtime.lastError.message}`);
+        resolve(); // Resolve instead of reject to avoid unhandled promise rejections
       } else {
         resolve(response);
       }

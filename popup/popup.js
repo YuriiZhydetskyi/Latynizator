@@ -1,4 +1,4 @@
-let currentLanguage = 'en';
+let currentLanguage = 'uk';
 let messages = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,7 +21,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     new Promise((resolve) => chrome.runtime.sendMessage({action: 'getSettings'}, resolve)),
     new Promise((resolve) => {
       chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {action: 'getState'}, resolve);
+        chrome.tabs.sendMessage(tabs[0].id, {action: 'getState'}, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            resolve({isTransliterated: false});  // Default state
+          } else {
+            resolve(response || {isTransliterated: false});
+          }
+        });
       });
     })
   ]);
@@ -81,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Functions
   async function loadLanguage() {
     const result = await new Promise(resolve => chrome.storage.local.get('language', resolve));
-    currentLanguage = result.language || 'en';
+    currentLanguage = result.language || 'uk';
     languageSelect.value = currentLanguage;
     const response = await fetch(chrome.runtime.getURL(`_locales/${currentLanguage}/messages.json`));
     messages = await response.json();
