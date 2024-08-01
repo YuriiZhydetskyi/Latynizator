@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "1.0",
+  "version": "1.1",
   "description": "__MSG_extensionDescription__",
   "default_locale": "uk",
   "permissions": [
@@ -34,7 +34,8 @@
       "js": [
         "lib/transliteration.js",
         "content.js"
-      ]
+      ],
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -55,5 +56,10 @@
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "latynizator@extensions.mozilla.org"
+    }
   }
 }

@@ -14,11 +14,7 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": [
-      "lib/transliteration.js",
-      "background.js"
-    ],
-    "type": "module"
+    "service_worker": "background.js"
   },
   "web_accessible_resources": [
     {
@@ -38,7 +34,8 @@
       "js": [
         "lib/transliteration.js",
         "content.js"
-      ]
+      ],
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -59,5 +56,10 @@
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "latynizator@extensions.mozilla.org"
+    }
   }
 }
