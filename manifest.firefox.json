@@ -3,15 +3,24 @@
   "name": "__MSG_extensionName__",
   "version": "1.0",
   "description": "__MSG_extensionDescription__",
-  "default_locale": "en",
+  "default_locale": "uk",
   "permissions": [
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "scripting",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
+  "background": {
+    "scripts": [
+      "lib/transliteration.js",
+      "background.js"
+    ],
+    "type": "module"
+  },
   "web_accessible_resources": [
     {
       "resources": [
@@ -42,21 +51,14 @@
       "128": "icons/icon128.jpeg"
     }
   },
-  "options_ui": {
-    "page": "options/options.html",
-    "open_in_tab": true
-  },
   "icons": {
     "16": "icons/icon16.jpeg",
     "32": "icons/icon32.jpeg",
     "48": "icons/icon48.jpeg",
     "128": "icons/icon128.jpeg"
   },
-  "background": {
-    "scripts": [
-      "lib/transliteration.js",
-      "background.js"
-    ],
-    "type": "module"
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
   }
 }
